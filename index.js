@@ -159,5 +159,5 @@ app.get('/users', async (req, res) => {
 
 
   app.listen(8080, () => {
-    console.log(`Server is running at ${PORT}`);
+    console.log(`Server is running at 8080`);
   });
