@@ -1,9 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const app = express();
-const router = express.Router();
    
 app.use(cors());
 app.use(express.json());
@@ -51,10 +52,112 @@ mongoose.connect(atlasConnectionURI, {
   const UserAuth = mongoose.model('UserAuth', userAuthSchema);
   const AdminAuth = mongoose.model('AdminAuth', adminAuthSchema);
   const UserDetails = mongoose.model('UserDetails', userDetailsSchema);
+  
+  app.post('/register', async (req, res) => {
+    try {
+      const { name, email, password } = req.body;
+      const userExists = await UserAuth.findOne({ email });
+  
+      if (userExists) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = new UserAuth({ name, email, password: hashedPassword });
+      await user.save();
+      res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+  
+  
+  app.post('/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await UserAuth.findOne({ email });
+  
+      if (!user || !(await bcrypt.compare(password, user.password))) {  
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+  
+      const token = jwt.sign({ userId: user._id }, 'YOUR_SECRET_KEY');
+      res.json({ token });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+
+  app.post("/addDetails", async (req, res) => {
+    try {
+      const {
+        name,
+        email,
+        registerNumber,
+        fatherName,
+        address,
+        phoneNumber,
+        dob,
+        gender,
+        tenthMark,
+        twelfthMark,
+        degree,
+        department,
+        currentCgpa,
+        project1,
+        project2,
+        project3,
+        project4,
+        skills,
+        portfolioLink,
+        githubLink,
+        linkedinProfile, 
+        resumeLink,
+      } = req.body; 
+
+      console.log(phoneNumber);
+   
+      const userDetails = new UserDetails({
+        name,
+        email,
+        registerNumber,
+        fatherName,
+        address,
+        dateOfBirth:dob,
+        gender,
+        tenthMark,
+        twelfthMark,
+        degree,
+        department,
+        currentCgpa,
+        projectNames: [project1, project2, project3, project4],
+        skills,
+        resumeDriveLink: resumeLink,
+      });
+  
+      await userDetails.save();
+      res.status(201).json({ message: 'Details added successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
 
 
-router.get('/', async (req, res) => {
-    return res.json("Hello")
+app.get('/users', async (req, res) => {
+    try {
+      const userdetails = await UserDetails.find();
+      res.json(userdetails);
+    } catch (error) { 
+      console.error('Error fetching user details:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }); 
 
-app.use(".netlify/functions/api" , router)
+
+
+  app.listen(8080, () => {
+    console.log(`Server is running at ${PORT}`);
+  });
