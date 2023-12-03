@@ -157,6 +157,82 @@ app.get('/users', async (req, res) => {
   }); 
 
 
+  // <------------- for attendance app ----------------> 
+
+  const studentAttendanceSchema = new mongoose.Schema({
+    name: {
+      type: String,
+      required: true,
+    },
+    registerNumber: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+    department: {
+      type: String,
+      required: true,
+    },
+    year: {
+      type: String,
+      required: true,
+    },
+    section: {
+      type: String,
+      required: true,
+    },
+    attendance: [
+      {
+        date: {
+          type: Date,
+          required: true,
+        },
+        isPresent: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
+  });
+
+  const StudentAttendance = mongoose.model('StudentAttendance', studentAttendanceSchema);
+
+  app.post('/student/register', async (req, res) => {
+  try {
+    const { name, registerNumber, email, department, year, section } = req.body;
+
+    const StudentAttendance = mongoose.model('StudentAttendance');
+
+    let studentAttendance = await StudentAttendance.findOne({
+      registerNumber: registerNumber,
+    });
+
+    if (!studentAttendance) {
+      studentAttendance = new StudentAttendance({
+        name,
+        registerNumber,
+        email,
+        department,
+        year,
+        section,
+        attendance: [],
+      });
+
+      await studentAttendance.save();
+
+      res.status(200).json({ message: 'Student registered successfully.' });
+      } else {
+        res.status(400).json({ error: 'Student already exists.' });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
 
   app.listen(8080, () => {
     console.log(`Server is running at 8080`);
