@@ -233,6 +233,18 @@ app.get('/users', async (req, res) => {
     }
   });
 
+  app.get('/student/all', async (req, res) => {
+    try {
+      const StudentAttendance = mongoose.model('StudentAttendance');
+      const allStudents = await StudentAttendance.find();
+      res.status(200).json(allStudents);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
+
 
   app.listen(8080, () => {
     console.log(`Server is running at 8080`);
