@@ -225,7 +225,7 @@ app.get('/users', async (req, res) => {
 
       res.status(200).json({ message: 'Student registered successfully.' });
       } else {
-        res.status(400).json({ error: 'Student already exists.' });
+        res.status(200).json({ error: 'Student already exists.' });
       }
     } catch (error) {
       console.error(error);
@@ -243,6 +243,35 @@ app.get('/users', async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });
+
+  app.post('/student/markAttendance', async (req, res) => {
+    try {
+      const { date, registerNumber } = req.body;
+      const student = await StudentAttendance.findOne({ registerNumber });
+  
+      if (!student) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+  
+      const existingAttendance = student.attendance.find((entry) => entry.date.toISOString().split('T')[0] === date);
+      if (existingAttendance) {
+        return res.status(400).json({ error: 'Attendance already marked for this date' });
+      }
+  
+      student.attendance.push({
+        date: new Date(date),
+        isPresent: true,
+      });
+  
+      await student.save();
+  
+      return res.status(200).json({ message: 'Attendance marked successfully' });
+    } catch (error) {
+      console.error('Error marking attendance:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
   
 
 
