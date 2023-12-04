@@ -253,7 +253,7 @@ app.get('/users', async (req, res) => {
         return res.status(404).json({ error: 'Student not found' });
       }
   
-      const existingAttendance = student.attendance.find((entry) => entry.date.toISOString().split('T')[0] === date);
+      const existingAttendance = student.attendance.find((entry) => entry.date === date);
       if (existingAttendance) {
         return res.status(200).json({ error: 'Attendance already marked for this date' });
       }
