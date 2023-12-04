@@ -187,7 +187,7 @@ app.get('/users', async (req, res) => {
     attendance: [
       {
         date: {
-          type: Date,
+          type: String,
           required: true,
         },
         isPresent: {
