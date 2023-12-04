@@ -259,7 +259,7 @@ app.get('/users', async (req, res) => {
       }
   
       student.attendance.push({
-        date: new Date(date),
+        date: date,
         isPresent: true,
       });
   
