@@ -255,7 +255,7 @@ app.get('/users', async (req, res) => {
   
       const existingAttendance = student.attendance.find((entry) => entry.date.toISOString().split('T')[0] === date);
       if (existingAttendance) {
-        return res.status(400).json({ error: 'Attendance already marked for this date' });
+        return res.status(200).json({ error: 'Attendance already marked for this date' });
       }
   
       student.attendance.push({
