@@ -82,7 +82,7 @@ mongoose.connect(atlasConnectionURI, {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
   
-      const token = jwt.sign({ userId: user._id }, 'YOUR_SECRET_KEY');
+      const token = jwt.sign({ userId: user._id }, 'VSBECCSE2002');
       res.json({ token });
     } catch (error) {
       console.error(error);
