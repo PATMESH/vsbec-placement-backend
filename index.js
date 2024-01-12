@@ -331,7 +331,9 @@ app.post("/login-demo", async (req, res) => {
     const user = await Auth.findOne({ user_id: id, password: password }).exec();
     if (user && user.category === category) {
       return res.status(200).json({ message: "Login successful" });
-    } else {
+    } else if(user.category !== category) {
+      return res.status(401).json({ error: `you are not an ${category}` });
+    }else{
       return res.status(401).json({ error: "Invalid credentials" });
     }
   } catch (err) {
