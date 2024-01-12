@@ -274,6 +274,9 @@ app.get('/users', async (req, res) => {
     }
   });
 
+
+  //  --------- for doconnect app -----------------
+
   app.get('/healthtip', (req, res) => {
     const jsonFilePath = path.join(__dirname, 'healthtip.json');
     const healthTips = JSON.parse(fs.readFileSync(jsonFilePath).toString()).healthTips;
@@ -289,6 +292,96 @@ app.get('/users', async (req, res) => {
 });
   
   
+
+// ------------ customer-details-demo -----------------
+
+
+const AuthSchema = new mongoose.Schema({
+  user_id: { type: Number, unique: true, required: true },
+  password: { type: String, required: true },
+  category: { type: String, enum: ['admin', 'customer'], required: true }
+});
+
+const CustomerSchema = new mongoose.Schema({
+  order_date: { type: Date },
+  company: { type: String, required: true },
+  owner: { type: String, required: true },
+  item: { type: String },
+  quantity: { type: Number },
+  weight: { type: Number },
+  request_for_shipment: { type: String },
+  tracking_id: { type: String },
+  shipment_size: { type: String },
+  box_count: { type: Number },
+  specification: { type: String },
+  checklist_quantity: { type: String },
+  user_id: { type: Number, ref: 'Auth' }
+});
+
+const Auth = mongoose.model('Auth', AuthSchema);
+const Customer = mongoose.model('Customer', CustomerSchema);
+
+app.post("/login-demo", async (req, res) => {
+  const { id, password, category } = req.body;
+  if (!id || !password) {
+    return res.status(400).json({ error: "Invalid credentials" });
+  }
+
+  try {
+    const user = await Auth.findOne({ user_id: id, password: password }).exec();
+    if (user && user.category === category) {
+      return res.status(200).json({ message: "Login successful" });
+    } else {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+  } catch (err) {
+    console.error("Login query error: " + err.stack);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/submitData", async (req, res) => {
+  const formData = req.body;
+  try {
+    const customer = new Customer(formData);
+    await customer.save();
+    return res.status(200).json({ message: "Data submitted successfully" });
+  } catch (err) {
+    console.error("Submit data query error: " + err.stack);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/adminView", async (req, res) => {
+  try {
+    const results = await Customer.aggregate([
+      {
+        $group: {
+          _id: "$user_id",
+          total_qty: { $sum: "$quantity" },
+          total_weight: { $sum: "$weight" },
+          total_box_count: { $sum: "$box_count" }
+        }
+      },
+      {
+        $project: {
+          user_id: "$_id",
+          total_qty: 1,
+          total_weight: 1,
+          total_box_count: 1,
+          _id: 0
+        }
+      }
+    ]).exec();
+
+    const formattedData = results || [];
+    return res.status(200).json(formattedData);
+  } catch (err) {
+    console.error("Admin view query error: " + err.stack);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 
   app.listen(8080, () => {
